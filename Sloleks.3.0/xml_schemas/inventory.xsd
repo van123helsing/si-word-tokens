@@ -1,0 +1,675 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This inventory defines types which are intended as building blocks that can and should be used in all CJVT schemas. -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd" />
+
+  <!-- Status string identifying stage in the lexicographic process -->
+  <xsd:simpleType name="statusType">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+
+  <!-- Basic form and info of a lexical unit -->
+  <xsd:complexType name="lemmaType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="audio" type="xsd:string"/> <!-- legacy ID associated with an audio file -->
+        <xsd:attribute name="type"> <!-- one of a limited number of possible types, default interpretation is normally "single" -->
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="single"/>
+              <xsd:enumeration value="phrase"/>
+              <xsd:enumeration value="compound"/>
+              <xsd:enumeration value="reflexive_verb"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="orthography_ids" type="xsd:string"/>
+        <xsd:attribute name="dynamic_accentuation_ids" type="xsd:string"/>
+        <xsd:attribute name="tonemic_accentuation_ids" type="xsd:string"/>
+        <xsd:attribute name="pronunciation_ids" type="xsd:string"/>
+        <xsd:attribute name="hyphenation_ids" type="xsd:string"/>
+        <xsd:attribute name="norm">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="non-standard"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- Free form comment -->
+  <xsd:simpleType name="commentType">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+
+  <!-- Used if need to disambiguate between two lexical units with the same lemma -->
+  <xsd:complexType name="homonymyType">
+    <xsd:sequence>
+      <xsd:element name="homonymyFeature" type="homonymyFeatureType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Basic grammatical feature as a name-value pair -->
+  <xsd:complexType name="grammarFeatureType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- List of grammatical features -->
+  <xsd:complexType name="grammarFeatureListType">
+    <xsd:sequence>
+      <xsd:element name="grammarFeature" type="grammarFeatureType"  minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Lemma-disambiguating feature, more open-ended than grammarFeatureType -->
+  <xsd:complexType name="homonymyFeatureType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- Element which uniquely identifies a headword, with its basic properties and (if necessary) disambiguating features -->
+  <xsd:complexType name="headwordType">
+    <xsd:sequence>
+      <xsd:element name="lemma" type="lemmaType"/>
+      <xsd:element name="homonymy" type="homonymyType" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Word component of a lexical unit -->
+  <xsd:complexType name="lexemeType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="type"> <!-- hmm, what types are expected; currently either missing or "argument", but does that really make sense? -->
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="argument"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="lexical_unit_lexeme_id" type="xsd:int"/> <!-- ID within its lexical unit -->
+        <xsd:attribute name="sloleks" type="xsd:string"/> <!-- Sloleks ID -->
+        <xsd:attribute name="kol" type="xsd:string"/> <!-- hmm, legacy attribute for a collocate's lemma; why not just use @lemma? -->  
+        <xsd:attribute name="lemma" type="xsd:string"/>
+        <xsd:attribute name="msd" type="xsd:string"/> <!-- msd within the Slovene JOS system -->
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- The lexical unit of the headword -->
+  <xsd:complexType name="lexicalUnitType">
+    <xsd:sequence>
+      <xsd:choice> <!-- the headword can be either a single lexeme or multiple components --> 
+        <xsd:element name="lexeme" type="lexemeType"/>
+        <xsd:element name="component" type="componentType" minOccurs="2" maxOccurs="unbounded"/>
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:int"/>
+    <xsd:attribute name="sloleksId" type="xsd:string"/>
+    <xsd:attribute name="sloleksKey" type="xsd:string"/>
+    <xsd:attribute name="type"> <!-- types of headwords allowed; hmm, probably should standardise allowed settings -->
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="single"/>
+          <xsd:enumeration value="MWE"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+    <xsd:attribute name="structure_id" type="xsd:int"/> <!-- syntactic structure ID -->
+    <xsd:attribute name="origin" type="xsd:string"/> <!-- legacy attribute to track where the lexical unit came from -->
+  </xsd:complexType>
+
+  <!-- English morphosyntactic categories (using the JOS system) -->
+  <xsd:simpleType name="categoryType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="noun"/>
+      <xsd:enumeration value="verb"/>
+      <xsd:enumeration value="adjective"/>
+      <xsd:enumeration value="adverb"/>
+      <xsd:enumeration value="pronoun"/>
+      <xsd:enumeration value="numeral"/>
+      <xsd:enumeration value="preposition"/>
+      <xsd:enumeration value="conjunction"/>
+      <xsd:enumeration value="particle"/>
+      <xsd:enumeration value="interjection"/>
+      <xsd:enumeration value="abbreviation"/>
+      <xsd:enumeration value="residual"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:complexType name="subcategoryType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="type" type="xsd:string"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- Grammatical information -->
+  <xsd:complexType name="grammarType">
+    <xsd:sequence>
+      <xsd:element name="category" type="categoryType" minOccurs="0"/> <!-- identifies the part of speech, unless it's not a single lexeme -->
+      <xsd:element name="subcategory" type="subcategoryType" minOccurs="0" maxOccurs="unbounded"/> <!-- marks relevant subcategory information -->
+      <xsd:element name="grammarFeature" type="grammarFeatureType" minOccurs="0" maxOccurs="unbounded"/> <!-- relevant grammatical features -->
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Statistical measure -->
+  <xsd:complexType name="measureType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:decimal">
+        <xsd:attribute name="type" type="xsd:string" use="required"/> <!-- type of measure (e.g., frequency, logDice); hmm, probably should be enumerated -->
+        <xsd:attribute name="corpus_id" type="xsd:int"/>
+        <xsd:attribute name="source" type="xsd:string"/> <!-- context of the measure, probably corpus name and version -->
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+    
+  <!-- List of measures -->
+  <xsd:complexType name="measureListType">
+    <xsd:sequence>
+      <xsd:element name="measure" type="measureType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Variant of a lexical unit -->
+  <xsd:complexType name="variantType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="lexical_unit_id" type="xsd:int"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- List of variants -->
+  <xsd:complexType name="variantListType">
+    <xsd:sequence>
+      <xsd:element name="variant" type="variantType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Related lexical unit -->
+  <xsd:complexType name="relatedEntryType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="lexical_unit_id" type="xsd:int"/>
+        <xsd:attribute name="origin" type="xsd:string"/> <!-- legacy attribute to track where the lexical unit came from -->
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+    
+  <!-- List of related entries -->
+  <xsd:complexType name="relatedEntryListType">
+    <xsd:sequence>
+      <xsd:element name="relatedEntry" type="relatedEntryType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Related sense -->
+  <xsd:complexType name="relatedSenseType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="sense_id" type="xsd:int"/>
+        <xsd:attribute name="senseKey" type="xsd:string"/>
+        <xsd:attribute name="type" type="xsd:string"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- List of related senses -->
+  <xsd:complexType name="relatedSenseListType">
+    <xsd:sequence>
+      <xsd:element name="relatedSense" type="relatedSenseType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Name-value pair for providing extra information -->
+  <xsd:complexType name="labelType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="feature_id" type="xsd:int"/>
+        <xsd:attribute name="featureId" type="xsd:string"/> <!-- an ID from an external source of the label feature -->
+        <xsd:attribute name="type" type="xsd:string"/> <!-- name of the label feature corresponding to its ID -->
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- List of labels -->
+  <xsd:complexType name="labelListType">
+    <xsd:sequence>
+      <xsd:element name="label" type="labelType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Definition of a sense -->
+  <xsd:complexType name="definitionType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="type" type="xsd:string"/> <!-- hmm: what's expected here? -->
+        <xsd:attribute name="definition_id" type="xsd:int"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+    
+  <!-- List of definitions -->
+  <xsd:complexType name="definitionListType">
+    <xsd:sequence>
+      <xsd:element name="definition" type="definitionType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Translation from Slovene into another language -->   
+  <xsd:complexType name="translationType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="targetLang" type="xsd:string"/> <!-- target language -->
+        <xsd:attribute name="source" type="xsd:string"/> <!-- where the translation comes from -->
+        <xsd:attribute name="audio" type="xsd:string"/> <!-- legacy ID associated with an audio file --> 
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- Component of a syntactic structure, containing one of the lexemes of a lexical unit; used in non-mixed content contexts -->
+  <xsd:complexType name="componentType">
+    <xsd:sequence>
+      <xsd:element name="lexeme" type="lexemeType"/>
+    </xsd:sequence>
+    <xsd:attribute name="structure_id" type="xsd:int"/>
+    <xsd:attribute name="num" type="xsd:int"/> <!-- index identifying the component's position within the syntactic structure -->
+  </xsd:complexType>
+
+  <!-- Component in a syntactic structure and lexeme in a lexical unit; used in mixed content contexts -->
+  <xsd:complexType name="compType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="structure_id" type="xsd:int"/>
+        <xsd:attribute name="num" type="xsd:int"/> <!-- index identifying the component's position within the syntactic structure -->
+        <xsd:attribute name="role"> <!-- withinin collocations, identifies the word's role -->
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="headword"/>
+              <xsd:enumeration value="collocate"/>
+              <xsd:enumeration value="other"/> <!-- used for prepositions and other extra components -->
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="sloleks" type="xsd:string"/> <!-- Sloleks ID -->
+        <xsd:attribute name="kol" type="xsd:string"/> <!-- legacy attribute for the word's lemma -->
+        <xsd:attribute name="lexical_unit_lexeme_id" type="xsd:int"/> <!-- ID within its lexical unit -->
+        <xsd:attribute name="lexeme_id" type="xsd:int"/> <!-- ID of the component's lexeme -->
+        <xsd:attribute name="space"> <!-- is the component followed by a space? only used if it isn't -->
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="false"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- Mixed-content container element used in examples where roles can include multiple word components (e.g., semantic roles).   -->
+  <xsd:complexType name="exampleTreeType" mixed="true">
+    <xsd:sequence>
+      <xsd:element name="comp" type="compType" minOccurs="0" maxOccurs="unbounded"/> <!-- the tree contains one or more components -->
+    </xsd:sequence>
+    <xsd:attribute name="role" type="semanticRoleType"/>
+  </xsd:complexType>
+
+  <!-- Example sentence from a corpus (as opposed to a multi-word example) -->
+  <xsd:complexType name="corpusExampleType" mixed="true">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded"> <!-- in most contexts, comps are sufficient, but in some trees are needed -->
+        <xsd:element name="comp" type="compType"/>
+        <xsd:element name="tree" type="exampleTreeType"/>
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="corpus_id" type="xsd:int"/>
+    <xsd:attribute name="corpusName" type="xsd:string"/>
+    <xsd:attribute name="example_id" type="xsd:int"/>
+    <xsd:attribute name="exampleId" type="xsd:string"/> <!-- the example's ID within the corpus itself --> 
+    <xsd:attribute name="modified" type="xsd:boolean"/> <!-- is the example text different than in the corpus? -->
+    <xsd:attribute name="lexical_unit_id" type="xsd:int"/>
+    <xsd:attribute name="audio" type="xsd:string"/> <!-- legacy ID associated with an audio file --> 
+  </xsd:complexType>
+
+  <!-- Multi-word example (as opposed to a corpus sentence) -->
+  <xsd:complexType name="multipleLexemeExampleType">
+    <xsd:sequence>
+      <xsd:element name="comp" type="compType" maxOccurs="unbounded"/> <!-- the example consists of a sequence of components -->
+    </xsd:sequence>
+    <xsd:attribute name="type" use="required"> <!-- one of a pre-defined set of types (which will probably still be expanded) -->
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="collocation"/>
+          <xsd:enumeration value="grammaticalCombination"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+    <xsd:attribute name="lexical_unit_id" type="xsd:int"/>
+    <xsd:attribute name="structure_id" type="xsd:int"/>
+    <xsd:attribute name="structureName" type="xsd:string"/> <!-- a string name for the structure, especially if we don't have its ID -->
+    <xsd:attribute name="frequency" type="xsd:int"/>
+    <xsd:attribute name="logDice" type="xsd:decimal"/>
+    <xsd:attribute name="audio" type="xsd:string"/> <!-- legacy ID associated with an audio file -->
+    <xsd:attribute name="cluster" type="xsd:int"/> <!-- number identifying a group of clustered examples -->
+  </xsd:complexType>
+
+  <!-- Wrapper including a translation and related data -->
+  <xsd:complexType name="translationContainerType">
+    <xsd:sequence>
+      <xsd:element name="labelList" type="labelListType" minOccurs="0"/>
+      <xsd:choice>
+        <xsd:sequence>
+          <xsd:element name="translation" type="translationType"/>
+          <xsd:element name="explanationList" type="explanationListType" minOccurs="0"/>
+        </xsd:sequence>
+        <xsd:element name="explanationList" type="explanationListType"/>
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="cluster" type="xsd:int"/> <!-- number identifying a group of clustered translations -->
+    <xsd:attribute name="source" type="xsd:string"/> <!-- hmm, we already have @source under translationType, that's not enough? -->
+  </xsd:complexType>
+
+  <!-- List of translation wrappers -->
+  <xsd:complexType name="translationContainerListType">
+    <xsd:sequence>
+      <xsd:element name="translationContainer" type="translationContainerType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <!-- Explanation (in contrast with translation) -->
+  <xsd:complexType name="explanationType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="language" type="xsd:string"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- List of explanations -->
+  <xsd:complexType name="explanationListType">
+    <xsd:sequence>
+      <xsd:element name="explanation" type="explanationType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Wrapper including an example and (possibly) its translation -->
+  <xsd:complexType name="exampleContainerType">
+    <xsd:sequence>
+      <xsd:choice> <!-- can be a corpus example or a multi-word example -->
+        <xsd:element name="corpusExample" type="corpusExampleType"/>
+        <xsd:element name="multiwordExample" type="multipleLexemeExampleType"/>
+      </xsd:choice>
+      <xsd:element name="translationContainerList" type="translationContainerListType" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- List of example containers -->
+  <xsd:complexType name="exampleContainerListType">
+    <xsd:sequence>
+      <xsd:element name="exampleContainer" type="exampleContainerType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Set of semantic role labels -->
+  <xsd:simpleType name="semanticRoleType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="ACT"/>
+      <xsd:enumeration value="PAT"/>
+      <xsd:enumeration value="REC"/>
+      <xsd:enumeration value="ORIG"/>
+      <xsd:enumeration value="RESLT"/>
+      <xsd:enumeration value="TIME"/>
+      <xsd:enumeration value="DUR"/>
+      <xsd:enumeration value="FREQ"/>
+      <xsd:enumeration value="LOC"/>
+      <xsd:enumeration value="SOURCE"/>
+      <xsd:enumeration value="GOAL"/>
+      <xsd:enumeration value="EVENT"/>
+      <xsd:enumeration value="AIM"/>
+      <xsd:enumeration value="CAUSE"/>
+      <xsd:enumeration value="CONTR"/>
+      <xsd:enumeration value="COND"/>
+      <xsd:enumeration value="REG"/>
+      <xsd:enumeration value="ACMP"/>
+      <xsd:enumeration value="RESTR"/>
+      <xsd:enumeration value="MANN"/>
+      <xsd:enumeration value="MEANS"/>
+      <xsd:enumeration value="QUANT"/>
+      <xsd:enumeration value="MWPRED"/>
+      <xsd:enumeration value="MODAL"/>
+      <xsd:enumeration value="PHRAS"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <!-- Container which associates a set of statistics with a certain type of data -->
+  <xsd:complexType name="statisticsContainerType">
+    <xsd:sequence>
+      <xsd:choice> <!-- currently only semantic roles are supported, but expect other types of data in future --> 
+        <xsd:element name="semanticRole" type="semanticRoleType"/>
+      </xsd:choice>
+      <xsd:element name="measureList" type="measureListType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- List of statistics containers -->
+  <xsd:complexType name="statisticsContainerListType">
+    <xsd:sequence>
+      <xsd:element name="statisticsContainer" type="statisticsContainerType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Syntactic structure, with its components or examples -->
+  <xsd:complexType name="syntacticStructureType">
+    <xsd:sequence> 
+      <xsd:choice> <!-- Can either list the structure's components, or examples of the structure (maybe this should be divided into 2 types) -->
+        <xsd:element name="component" type="componentType" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="exampleContainerList" type="exampleContainerListType" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:int"/>
+    <xsd:attribute name="name" type="xsd:string"/> <!-- a string name for the structure, especially if we don't have its ID -->
+    <xsd:attribute name="pp" type="xsd:string"/> <!-- the structure's preposition (if any) -->
+  </xsd:complexType>
+
+  <!-- List of syntactic structures -->
+  <xsd:complexType name="syntacticStructureListType">
+    <xsd:sequence>
+      <xsd:element name="syntacticStructure" type="syntacticStructureType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="system"> <!-- the system within which the structure is defined  -->
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="JOS"/>
+          <xsd:enumeration value="UD"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+  </xsd:complexType>
+
+  <!-- Container associating a semantic role with a list of syntactic structures -->
+  <xsd:complexType name="semanticRoleContainerType">
+    <xsd:sequence>
+      <xsd:element name="semanticRole" type="semanticRoleType"/>
+      <xsd:element name="syntacticStructureList" type="syntacticStructureListType" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+    <xsd:attribute name="cluster" type="xsd:int"/>  <!-- hmm, number identifying a group of clustered roles? -->
+  </xsd:complexType>
+
+  <!-- List of semantic role containers -->
+  <xsd:complexType name="semanticRoleContainerListType">
+    <xsd:sequence>
+      <xsd:element name="semanticRoleContainer" type="semanticRoleContainerType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Human-readable string identifying a valency pattern -->
+  <xsd:simpleType name="patternRepresentationType">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+
+  <!-- Wrapper for valency pattern data -->
+  <xsd:complexType name="valencyPatternType">
+    <xsd:sequence>
+      <xsd:element name="measureList" type="measureListType"/>
+      <xsd:element name="semanticRoleContainerList" type="semanticRoleContainerListType"/>
+      <xsd:element name="patternRepresentation" type="patternRepresentationType"/>
+      <xsd:element name="exampleContainerList" type="exampleContainerListType"/>
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:int"/>
+  </xsd:complexType>
+      
+  <!-- List of valency patterns -->
+  <xsd:complexType name="valencyPatternListType">
+    <xsd:sequence>
+      <xsd:element name="valencyPattern" type="valencyPatternType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="system"> <!-- the system within which the structure is defined  -->
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="JOS"/>
+          <xsd:enumeration value="UD"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+  </xsd:complexType>
+
+  <!-- MSD code, in a particular language -->
+  <xsd:complexType name="msdType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="language" type="xsd:string" use="required"/>
+        <xsd:attribute name="system" type="xsd:string" use="required"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <!-- Container for all kinds of form representation lists -->
+  <xsd:complexType name="formRepresentationsType">
+    <xsd:sequence>
+      <xsd:element name="orthographyList" type="orthographyListType"/>
+      <xsd:element name="accentuationList" type="accentuationListType" minOccurs="0" maxOccurs="2"/>
+      <xsd:element name="pronunciationList" type="pronunciationListType" minOccurs="0"/>
+      <xsd:element name="hyphenationList" type="hyphenationListType" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="orthographyType">
+    <xsd:sequence>
+      <xsd:element name="form" type="formType"/>
+      <xsd:element name="measureList" type="measureListType" minOccurs="0"/>
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:integer"/>
+    <xsd:attribute name="morphologyPatterns" type="xsd:string"/>
+    <xsd:attribute name="status" type="xsd:string"/>
+    <xsd:attribute name="norm" type="xsd:string"/> <!-- closed set? -->
+  </xsd:complexType>
+
+  <xsd:complexType name="orthographyListType">
+    <xsd:sequence>
+      <xsd:element name="orthography" type="orthographyType" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="accentuationType">
+    <xsd:sequence>
+      <xsd:element name="form" type="formType" minOccurs="0"/>
+      <xsd:element name="measureList" type="measureListType" minOccurs="0"/>
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:integer"/>
+    <xsd:attribute name="orthography_id" type="xsd:integer"/>
+    <xsd:attribute name="accentuationPatterns" type="xsd:string"/>
+    <xsd:attribute name="status" type="xsd:string"/> 
+    <xsd:attribute name="norm" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="accentuationListType">
+    <xsd:sequence>
+      <xsd:element name="accentuation" type="accentuationType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="type">
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="dynamic"/>
+          <xsd:enumeration value="tonemic"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+  </xsd:complexType>
+
+  <xsd:simpleType name="formType">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+
+  <xsd:complexType name="pronunciationFormType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="script" type="xsd:string" use="required"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="pronunciationType">
+    <xsd:sequence>
+      <xsd:element name="form" type="pronunciationFormType" maxOccurs="unbounded"/>
+      <xsd:element name="measureList" type="measureListType" minOccurs="0"/>
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:integer"/>
+    <xsd:attribute name="dynamic_accentuation_id" type="xsd:integer"/>
+    <xsd:attribute name="tonemic_accentuation_id" type="xsd:integer"/>
+    <xsd:attribute name="status" type="xsd:string"/> 
+    <xsd:attribute name="norm" type="xsd:string"/>
+    <xsd:attribute name="type" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="pronunciationListType">
+    <xsd:sequence>
+      <xsd:element name="pronunciation" type="pronunciationType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="hyphenationType">
+    <xsd:sequence>
+      <xsd:element name="form" type="formType"/>
+      <xsd:element name="measureList" type="measureListType" minOccurs="0"/>
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:integer"/>
+    <xsd:attribute name="orthography_id" type="xsd:integer"/>
+    <xsd:attribute name="status" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="hyphenationListType">
+    <xsd:sequence>
+      <xsd:element name="hyphenation" type="hyphenationType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Word form wrapper -->
+  <xsd:complexType name="wordFormType">
+    <xsd:sequence>
+      <xsd:element name="msd" type="msdType" maxOccurs="unbounded"/>
+      <xsd:element name="grammarFeatureList" type="grammarFeatureListType" minOccurs="0"/>
+      <xsd:element name="formRepresentations" type="formRepresentationsType"/>
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:int"/>
+  </xsd:complexType>
+
+  <!-- List of word forms -->
+  <xsd:complexType name="wordFormListType">
+    <xsd:sequence>
+      <xsd:element name="wordForm" type="wordFormType" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+</xsd:schema>
